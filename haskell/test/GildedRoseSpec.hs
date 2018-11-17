@@ -18,13 +18,13 @@ spec = do
       \(Positive sellIn) (Positive quality) ->
         let inventory = Item "foo" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in quality' === (quality - 1)
+        in quality' === max (quality - 1) 0
 
     it "decreases quality twice as fast when after sellIn" $ property $
-      \(Positive sellIn) quality ->
+      \(Positive sellIn) (Positive quality) ->
         let inventory = Item "foo" (-sellIn) quality
             (Item _ _ quality') = updateQualityItem inventory
-        in quality > 1 ==> quality' === (quality - 2)
+        in quality' === max (quality - 2) 0
 
     it "quality is never negative" $ property $
       \sellIn (Positive quality) ->
@@ -36,7 +36,7 @@ spec = do
       \sellIn quality ->
         let inventory = Item "foo" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in quality < 50 ==> quality' <= 50
+        in quality <= 50 ==> quality' <= 50
 
   describe "Aged Brie" $ do
 
@@ -50,13 +50,13 @@ spec = do
       \(Positive sellIn) (Positive quality) ->
         let inventory = Item "Aged Brie" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in quality < 50 ==> quality' === (quality + 1)
+        in quality <= 50 ==> quality' === min (quality + 1) 50
 
     it "increases quality twice as fast when after sellIn" $ property $
       \sellIn quality ->
         let inventory = Item "Aged Brie" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in sellIn <= 0 && quality < 49 ==> quality' === (quality + 2)
+        in sellIn <= 0 && quality <= 50 ==> quality' === min (quality + 2) 50
 
     it "quality is never negative" $ property $
       \sellIn (Positive quality) ->
@@ -68,7 +68,7 @@ spec = do
       \sellIn quality ->
         let inventory = Item "Aged Brie" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in quality < 50 ==> quality' <= 50
+        in quality <= 50 ==> quality' <= 50
 
   describe "Sulfuras, Hand of Ragnaros" $ do
 
@@ -90,21 +90,21 @@ spec = do
       \(Positive sellIn) (Positive quality) ->
         let inventory = Item "Backstage passes to a TAFKAL80ETC concert" sellIn quality
             (Item _ _ quality') = updateQualityItem inventory
-        in sellIn > 10 && quality < 50 ==> quality' === (quality + 1)
+        in sellIn > 10 && quality <= 50 ==> quality' === min (quality + 1) 50
 
     it "increases quality by 2 when less than 10 and more than 5 days left" $
       forAll (choose (6, 10)) $
         \sellIn (Positive quality) ->
           let inventory = Item "Backstage passes to a TAFKAL80ETC concert" sellIn quality
               (Item _ _ quality') = updateQualityItem inventory
-          in quality < 49 ==> quality' === (quality + 2)
+          in quality <= 50 ==> quality' === min (quality + 2) 50
 
     it "increases quality by 3 when less than 5 days left" $
       forAll (choose (1, 5)) $
         \sellIn (Positive quality) ->
           let inventory = Item "Backstage passes to a TAFKAL80ETC concert" sellIn quality
               (Item _ _ quality') = updateQualityItem inventory
-          in quality < 48 ==> quality' === (quality + 3)
+              in quality <= 50 ==> quality' === min (quality + 3) 50
 
     it "sets quality to 0 after sellIn" $ property $
       \(Positive sellIn) (Positive quality) ->
