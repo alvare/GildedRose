@@ -2,7 +2,7 @@ module GildedRose where
 
 type GildedRose = [Item]
 
-data Item = Item String Int Int
+data Item = Item String Int Int | ConjuredItem String Int Int
   deriving (Eq)
 
 instance Show Item where
@@ -69,3 +69,7 @@ updateQualityItem (Item name sellIn quality) =
         then (Item name sellIn' (quality' + 1))
         else (Item name sellIn' quality')
     else (Item name sellIn' quality')
+updateQualityItem (ConjuredItem name sellIn quality) =
+  let (Item _ sellIn' quality') = updateQualityItem $ Item name sellIn quality
+      (Item _ _ quality'') = updateQualityItem $ Item name sellIn quality'
+  in ConjuredItem name sellIn' quality''
